@@ -7,6 +7,7 @@ from utils import *
 
 parser = argparse.ArgumentParser(description="UDP Pose Receiver and Visualizer")
 parser.add_argument("--point_cloud", type=str, required=True, help="Path to the point cloud file (e.g., points3D.txt)")
+parser.add_argument("--gravity_vector", nargs=3, type=float, default=None, help="Vector to gravity (x y z)")
 parser.add_argument("--plot_interval", type=float, default=0.5, help="設定繪圖更新頻率 (單位：秒)，預設為 0.5 秒")
 parser.add_argument("--udp_port", type=int, default=8888, help="UDP port listening to. Default=8888")
 args = parser.parse_args()
@@ -62,8 +63,10 @@ plt.ion()
 fig = plt.figure()
 ax = fig.add_subplot()  # 2d
 
-# 效能優化小提醒：點雲檔案建議只在迴圈外讀取一次，不要每次畫圖都重新 load
 pt_cloud = load_point_cloud(points3D_fname)
+align_mtx = None
+if args.gravity_vector is not None:
+    align_mtx = get_align_matrix(args.gravity_vector)
 
 while True:
     try:
@@ -71,13 +74,11 @@ while True:
             # 複製一份當下的 poses 狀態來畫圖，避免畫圖到一半背景執行緒又塞新資料進來
             current_poses = list(cam_poses)
         
-        if not current_poses:
-            time.sleep(0.1) 
-            continue
+        # if not current_poses:
+        #     time.sleep(0.1) 
+        #     continue
         
-        # display_pose(fig, ax, current_poses, pt_cloud, only_pos=False)
-        display_pose_2d(fig, ax, current_poses, pt_cloud, only_pos=False)
-        
+        display_pose_2d(fig, ax, current_poses, pt_cloud, only_pos=False, align_mtx=align_mtx)      
         # 會讓迴圈暫停指定的秒數，還會同時刷新 matplotlib 的 GUI 畫面，避免視窗無回應
         plt.pause(args.plot_interval)
         

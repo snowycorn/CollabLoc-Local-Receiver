@@ -4,7 +4,7 @@ import time
 # 設定為全局廣播地址
 UDP_IP = "255.255.255.255" 
 UDP_PORT = 8888
-TARGET_FPS = 30  # 目標幀率
+TARGET_FPS = 5  # 目標幀率
 
 print(f"準備發送廣播測試資料到 {UDP_IP}:{UDP_PORT}...")
 print(f"模擬發送頻率: 每秒 {TARGET_FPS} 幀")
@@ -15,13 +15,14 @@ sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 counter = 0
 # 計算每發送一筆資料需要等待的時間
 frame_interval = 1.0 / TARGET_FPS 
+z = 0.0
 
 while True:
     # 紀錄這一個迴圈的開始時間，用來扣掉發送資料消耗的時間，讓頻率更精準
     start_time = time.time()
     
-    test_message = f"img_{counter}|{time.time()}|0.0 0.0 0.0 1.0 1.0 2.0 3.0"
-    
+    test_message = f"img_{counter}|{time.time()}|0.0 0.0 {z} 1.0 1.0 2.0 3.0"
+    z += 0.1
     try:
         # 發送廣播
         sock.sendto(test_message.encode('utf-8'), (UDP_IP, UDP_PORT))
